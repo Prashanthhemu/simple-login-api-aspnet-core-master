@@ -14,6 +14,7 @@ namespace WebApi.Services
         User Create(User user, string password);
         void Update(User user, string password = null);
         void Delete(int id);
+        void UpdateSignOutTime(int id);
     }
 
     public class UserService : IUserService
@@ -39,7 +40,7 @@ namespace WebApi.Services
             // check if password is correct
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
-
+            UpdateSignInTime(username);
             // authentication successful
             return user;
         }
@@ -103,6 +104,31 @@ namespace WebApi.Services
                 user.PasswordHash = passwordHash;
                 user.PasswordSalt = passwordSalt;
             }
+
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+
+        public void UpdateSignInTime(string userName)
+        {
+            var user = _context.Users.FirstOrDefault(x=>x.Username.Equals(userName));
+
+            // update user properties
+            user.LogInTime = DateTime.Now;
+
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+
+
+        public void UpdateSignOutTime(int id)
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Id.Equals(id));
+            if (user == null)
+                throw new AppException("User not found");
+
+            // update user properties
+            user.LogOutTime = DateTime.Now;
 
             _context.Users.Update(user);
             _context.SaveChanges();
